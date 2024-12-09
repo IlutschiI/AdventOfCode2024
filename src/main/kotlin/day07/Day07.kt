@@ -3,7 +3,7 @@ package org.example.day07
 import org.example.readAsString
 
 enum class Operations {
-    PLUS, MULTIPLY, DIVIDE, MINUS
+    PLUS, MULTIPLY, CONCAT
 }
 
 fun main() {
@@ -13,6 +13,17 @@ fun main() {
     val operations = listOf(Operations.PLUS, Operations.MULTIPLY)
 
     val lines = input.lines()
+    foldLines(lines, operations)
+
+
+    val operations2 = listOf(Operations.PLUS, Operations.MULTIPLY, Operations.CONCAT)
+    foldLines(lines, operations2)
+}
+
+private fun foldLines(
+    lines: List<String>,
+    operations: List<Operations>
+) {
     lines.fold(0L) { acc, it ->
         val (result, numbers) = it.split(": ").let { res ->
             res[0].toLong() to res[1].split(" ").map(String::toLong)
@@ -38,7 +49,7 @@ fun calculate(numbers: List<Long>, operations: List<Operations>): Long {
         when (operations[index - 1]) {
             Operations.PLUS -> acc + i
             Operations.MULTIPLY -> acc * i
-            else -> acc
+            Operations.CONCAT -> "$acc$i".toLong()
         }
     }
 }
