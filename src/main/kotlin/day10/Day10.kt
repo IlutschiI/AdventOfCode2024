@@ -32,12 +32,22 @@ fun main() {
     val result = paths.fold(0) { acc, path ->
         val trailStartEnd = path.second.filter { it.size == 10 }.map { it.first() to it.last() }
         val trailHeadScore = trailStartEnd.distinct().count()
-        println(trailHeadScore)
-        println(path)
+//        println(trailHeadScore)
+//        println(path)
         acc + trailHeadScore
     }
 
-    println(result)
+    println("part1: $result")
+
+    val result2 = paths.fold(0) { acc, path ->
+        val trailStartEnd = path.second.filter { it.size == 10 }.map { it.first() to it.last() }
+        val trailHeadScore = trailStartEnd.count()
+//        println(trailHeadScore)
+//        println(path)
+        acc + trailHeadScore
+    }
+    println("part2: $result2")
+
 }
 
 fun calculatePaths(
