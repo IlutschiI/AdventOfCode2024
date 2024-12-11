@@ -38,7 +38,5 @@ fun applyRules(stones: List<Pair<Long, Long>>): List<Pair<Long, Long>> {
             listOf((it.first * 2024) to (it.second))
         }
     }
-    return newList.groupBy { it.first }.map { it.key to it.value.sumOf { a -> a.second } }.also {
-//        println(it)
-    }
+    return newList.groupBy { it.first }.map { it.key to it.value.sumOf { a -> a.second } }
 }
