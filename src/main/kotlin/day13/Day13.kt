@@ -30,67 +30,51 @@ fun main() {
     }
 
     games.mapNotNull { game ->
-        calculateGame(game)
-    }.sum().let { println(it) }
+        calculateGame(game) { it <= 100 }
+    }.sum().let { println("Part1: $it") }
 
     games.mapNotNull { game ->
-        calculateGamePart2(
+        calculateGame(
             game.copy(
                 priceX = game.priceX + 10000000000000,
                 priceY = game.priceY + 10000000000000
             )
-        )
-    }.sum().let { println(it) }
+        ) { true }
+    }.sum().let { println("Part2: $it") }
 
 }
 
-fun calculateGame(game: Game): Long? {
+fun calculateGame(game: Game, checkAmountOfPresses: (Long) -> Boolean): Long? {
+    //when starting Pressing B
     val buttonBPresses =
         (game.buttonA.x * game.priceY - game.buttonA.y * game.priceX) / (game.buttonA.x * game.buttonB.y - game.buttonB.x * game.buttonA.y).toDouble()
-    val buttonAPresses = (game.priceX - game.buttonB.x*buttonBPresses) / game.buttonA.x.toDouble()
+    val buttonAPresses = (game.priceX - game.buttonB.x * buttonBPresses) / game.buttonA.x.toDouble()
 
+    //when starting Pressing A
     val buttonBPresses2 =
         (game.buttonA.y * game.priceX - game.buttonA.x * game.priceY) / (game.buttonB.x * game.buttonA.y - game.buttonA.x * game.buttonB.y).toDouble()
-    val buttonAPresses2 = (game.priceX - game.buttonB.x*buttonBPresses2) / game.buttonA.x.toDouble()
+    val buttonAPresses2 = (game.priceX - game.buttonB.x * buttonBPresses2) / game.buttonA.x.toDouble()
 
     var result1: Long? = null
-    if (buttonAPresses.rem(1) == 0.0 && buttonBPresses.rem(1) == 0.0 && buttonAPresses <= 100 && buttonBPresses <= 100) {
-        result1 = buttonAPresses.toLong()*3 + buttonBPresses.toLong()
+    if (buttonAPresses.rem(1) == 0.0 &&
+        buttonBPresses.rem(1) == 0.0 &&
+        checkAmountOfPresses(buttonAPresses.toLong()) &&
+        checkAmountOfPresses(buttonBPresses.toLong())
+    ) {
+        result1 = buttonAPresses.toLong() * 3 + buttonBPresses.toLong()
     }
 
     var result2: Long? = null
-    if (buttonAPresses2.rem(1) == 0.0 && buttonBPresses2.rem(1) == 0.0 && buttonAPresses2 <= 100 && buttonBPresses2 <= 100) {
-        result2 = buttonAPresses2.toLong()*3 + buttonBPresses2.toLong()
+    if (buttonAPresses2.rem(1) == 0.0 &&
+        buttonBPresses2.rem(1) == 0.0 &&
+        checkAmountOfPresses(buttonAPresses2.toLong()) &&
+        checkAmountOfPresses(buttonBPresses2.toLong())
+    ) {
+        result2 = buttonAPresses2.toLong() * 3 + buttonBPresses2.toLong()
     }
 
     return if (result1 != null || result2 != null) {
         Math.min(result1 ?: Long.MAX_VALUE, result2 ?: Long.MAX_VALUE)
-    } else {
-        null
-    }
-}
-
-fun calculateGamePart2(game: Game): Long? {
-    val buttonBPresses =
-        (game.buttonA.x * game.priceY - game.buttonA.y * game.priceX) / (game.buttonA.x * game.buttonB.y - game.buttonB.x * game.buttonA.y).toDouble()
-    val buttonAPresses = (game.priceX - game.buttonB.x*buttonBPresses) / game.buttonA.x.toDouble()
-
-    val buttonBPresses2 =
-        (game.buttonA.y * game.priceX - game.buttonA.x * game.priceY) / (game.buttonB.x * game.buttonA.y - game.buttonA.x * game.buttonB.y).toDouble()
-    val buttonAPresses2 = (game.priceX - game.buttonB.x*buttonBPresses2) / game.buttonA.x.toDouble()
-
-    var result1: Long? = null
-    if (buttonAPresses.rem(1) == 0.0 && buttonBPresses.rem(1) == 0.0) {
-        result1 = buttonAPresses.toLong()*3 + buttonBPresses.toLong()
-    }
-
-    var result2: Long? = null
-    if (buttonAPresses2.rem(1) == 0.0 && buttonBPresses2.rem(1) == 0.0) {
-        result2 = buttonAPresses2.toLong()*3 + buttonBPresses2.toLong()
-    }
-
-    return if (result1 != null || result2 != null) {
-       Math.min(result1 ?: Long.MAX_VALUE, result2 ?: Long.MAX_VALUE)
     } else {
         null
     }
