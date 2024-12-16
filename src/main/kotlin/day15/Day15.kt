@@ -54,7 +54,8 @@ fun main() {
         }
     }
 
-    println(gps)
+    println("part2: ${calculateGpsValue(mapPart1, 'O')}")
+
 
 
     //part2
@@ -79,9 +80,7 @@ fun main() {
         if (mapPart2[newPos.first][newPos.second] == '[' || mapPart2[newPos.first][newPos.second] == ']') {
             val boxes = findAllBoxesInDirectionPart2(mapPart2, newPos, direction, listOf())
             var newMap = mapPart2.map { it.toMutableList() }.toMutableList()
-//            if (direction == Direction.UP || direction == Direction.DOWN) {
-                val canMoveBoxes = getCanMoveBoxes(boxes, mapPart2, direction)
-//            }
+            val canMoveBoxes = getCanMoveBoxesPart2(boxes, mapPart2, direction)
             if (canMoveBoxes) {
                 boxes.forEach {
                     newMap[it.first.first][it.first.second] = '.'
@@ -97,36 +96,35 @@ fun main() {
             } else {
                 return@forEach
             }
-//            val canMoveBoxes =
-//                mapPart2[boxes.last().first + direction.yDiff][boxes.last().second + direction.xDiff] == '.'
-//            if (canMoveBoxes) {
-//                mapPart2[boxes.first().first][boxes.first().second] = '.'
-//                mapPart2[boxes.last().first + direction.yDiff][boxes.last().second + direction.xDiff] = 'O'
-//            } else {
-//                return@forEach
-//            }
         }
         robotPosPart2 = newPos
     }
 
-    gps = 0
+    println("part2: ${calculateGpsValue(mapPart2, '[')}")
+
+}
+
+private fun calculateGpsValue(
+    mapPart2: MutableList<MutableList<Char>>,
+    boxIndicator: Char
+): Int {
+    var gps = 0
     mapPart2.forEachIndexed { rowIndex, chars ->
         chars.forEachIndexed { columnIndex, c ->
-            if (c == '[') {
+            if (c == boxIndicator) {
                 gps += (rowIndex * 100 + columnIndex)
             }
         }
     }
-    println(gps)
-
+    return gps
 }
 
-private fun getCanMoveBoxes(
+private fun getCanMoveBoxesPart2(
     boxes: List<Pair<Pair<Int, Int>, Pair<Int, Int>>>,
     map: MutableList<MutableList<Char>>,
     direction: Direction
 ): Boolean {
-    return when(direction) {
+    return when (direction) {
         Direction.LEFT, Direction.RIGHT -> {
             boxes.any {
                 val box1NewPosChar = map[it.first.first + direction.yDiff][it.first.second + direction.xDiff]
@@ -134,6 +132,7 @@ private fun getCanMoveBoxes(
                 listOf(box1NewPosChar, box2NewPosChar).any { c -> c == '.' }
             }
         }
+
         Direction.UP, Direction.DOWN -> {
             boxes.all {
                 val box1NewPosChar = map[it.first.first + direction.yDiff][it.first.second + direction.xDiff]
@@ -209,12 +208,12 @@ fun findAllBoxesInDirectionPart2(
         return boxes
     } else {
         var currentPosition = position
-        var boxes = listOf<Pair<Int, Int>>()
+        var verticalBoxes = listOf<Pair<Int, Int>>()
         while (map[currentPosition.first][currentPosition.second] == '[' || map[currentPosition.first][currentPosition.second] == ']') {
-            boxes += currentPosition
+            verticalBoxes += currentPosition
             currentPosition = currentPosition.first + direction.yDiff to currentPosition.second + direction.xDiff
         }
-        return boxes.chunked(2).map {
+        return verticalBoxes.chunked(2).map {
             it[0] to it[1]
         }
     }
