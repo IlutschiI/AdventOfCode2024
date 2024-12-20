@@ -13,18 +13,21 @@ data class Node(
         x: Int,
         y: Int,
         direction: Direction,
-        gCost: Int = Int.MAX_VALUE,
         hCost: Int = Int.MAX_VALUE,
         parent: Node? = null
     ) : this(x, y) {
         this.direction = direction
         this.parent = parent
-        this.gCost = gCost
         this.hCost = hCost
     }
 
     lateinit var direction: Direction
-    var gCost: Int = Int.MAX_VALUE
+    val gCost: Int
+        get() {
+            return if (parent == null) {
+                0
+            } else if (parent!!.direction == direction) parent!!.gCost + 1 else parent!!.gCost + 1001
+        }
     var hCost: Int = Int.MAX_VALUE
     var parent: Node? = null
 
@@ -37,19 +40,64 @@ data class Node(
 
 }
 
+fun aStarPart2(
+    map: List<List<Char>>,
+    startPosition: Pair<Int, Int>,
+    direction: Direction,
+    endPosition: Pair<Int, Int>
+): List<List<Pair<Int, Int>>> {
+    val startNode =
+        Node(startPosition.second, startPosition.first, direction, heuristic(startPosition, endPosition))
+
+    val fringe = PriorityQueue<Node>()
+
+    val bestPaths = mutableMapOf<Pair<Int, Int>, MutableList<Node>>()
+
+    fringe.add(startNode)
+    bestPaths[startPosition] = mutableListOf(startNode)
+
+
+    while (fringe.isNotEmpty()) {
+        val currentNode = fringe.poll()
+
+        if (currentNode.x == endPosition.second && currentNode.y == endPosition.first) {
+            continue
+        }
+
+        for (neighbor in getNeighbors(map, currentNode)) {
+            neighbor.hCost = heuristic(neighbor.y to neighbor.x, endPosition)
+            if (!bestPaths.containsKey(neighbor.y to neighbor.x) || neighbor.gCost <= bestPaths[neighbor.y to neighbor.x]!!.minOf { it.gCost }) {
+                fringe.add(neighbor)
+                bestPaths.computeIfAbsent(neighbor.y to neighbor.x) { mutableListOf() }.add(neighbor)
+            }
+        }
+    }
+
+    // Rekonstruiere alle besten Pfade
+    fun backtrack(node: Node?): List<List<Pair<Int, Int>>> {
+        if (node == null) return listOf(emptyList())
+        val paths = mutableListOf<List<Pair<Int, Int>>>()
+        for (parent in bestPaths[Pair(node.y, node.x)]?.mapNotNull { it.parent } ?: emptyList()) {
+            paths += backtrack(parent).map { it + Pair(node.y, node.x) }
+        }
+        return if (paths.isEmpty()) listOf(listOf(Pair(node.y, node.x))) else paths
+    }
+
+    return backtrack(bestPaths[endPosition]?.firstOrNull()).map { it.reversed() }
+}
+
+
 fun aStar(
     map: List<List<Char>>,
     startPosition: Pair<Int, Int>,
     direction: Direction,
     endPosition: Pair<Int, Int>
-): Int {
+): List<Node> {
     val startNode =
-        Node(startPosition.second, startPosition.first, direction, 0, heuristic(startPosition, endPosition))
+        Node(startPosition.second, startPosition.first, direction, heuristic(startPosition, endPosition))
 
     val fringe = PriorityQueue<Node>()
     val visited = mutableSetOf<Node>()
-
-//    val possiblePaths = mutableListOf<Node>()
 
     fringe.add(startNode)
 
@@ -58,40 +106,30 @@ fun aStar(
         visited.add(currentNode)
 
         if (currentNode.x == endPosition.second && currentNode.y == endPosition.first) {
-//            if (possiblePaths.isEmpty()){
-//                //add
-//            } else if (possiblePaths.first().gCost == currentNode.gCost) {
-//                //add
-//            } else {
-//                //return list
-//            }
-            return currentNode.gCost
+            return reconstructPath(currentNode)
         }
 
         for (neighbor in getNeighbors(map, currentNode)) {
             if (neighbor !in visited) {
-                neighbor.gCost =
-                    if (currentNode.direction != neighbor.direction) currentNode.gCost + 1001 else currentNode.gCost + 1
                 neighbor.hCost = heuristic(neighbor.y to neighbor.x, endPosition)
                 fringe.add(neighbor)
-                visited.add(neighbor)
 
             }
         }
     }
-    return -1
+    return emptyList()
 }
 
-//fun isNodeAlreadyInPath(node:Node): Boolean{
-//    var parent = node.parent
-//    while (parent != null){
-//        if (parent.x == node.x && parent.y == node.y){
-//            return true
-//        }
-//        parent = parent.parent
-//    }
-//    return false
-//}
+fun reconstructPath(goalNode: Node): List<Node> {
+    val path = mutableListOf<Node>()
+    var currentNode: Node? = goalNode
+    while (currentNode != null) {
+        path.add(currentNode)
+        currentNode = currentNode.parent
+    }
+    return path.reversed()
+}
+
 
 fun getNeighbors(map: List<List<Char>>, node: Node): List<Node> {
     val directions = listOf(
@@ -124,16 +162,21 @@ fun getFirstPositionOf(map: List<List<Char>>, char: Char): Pair<Int, Int> {
 }
 
 fun main() {
-//    val input = "day16/test_input".readAsString()
+    val input = "day16/test_input".readAsString()
 //    val input = "day16/test_input2".readAsString()
-    val input = "day16/input".readAsString()
+//    val input = "day16/input".readAsString()
 
     val map = input.split(System.lineSeparator()).map { it.toCharArray().toList() }
     val startPosition = getFirstPositionOf(map, 'S')
     val endPosition = getFirstPositionOf(map, 'E')
 
-    aStar(map, startPosition, Direction.RIGHT, endPosition).let {
-        println(it)
+    val path = aStar(map, startPosition, Direction.RIGHT, endPosition).let {
+        println(it.last().gCost)
+        it
     }
 
+
+    aStarPart2(map, startPosition, Direction.RIGHT, endPosition).let {
+        println(it.flatMap { it }.distinct().size)
+    }
 }
